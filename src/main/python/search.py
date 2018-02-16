@@ -1,9 +1,14 @@
+import string
+
+from collections import defaultdict
+
 from readers import read_queries, read_documents
 
-inverted_index = {}
+inverted_index = defaultdict(lambda: defaultdict(int))
 
 
-def remove_not_indexed_toknes(tokens):
+def remove_not_indexed_tokens(tokens):
+    #Should work
     return [token for token in tokens if token in inverted_index]
 
 
@@ -24,6 +29,7 @@ def merge_two_postings(first, second):
 
 
 def merge_postings(indexed_tokens):
+    # Fix
     first_list = inverted_index[indexed_tokens[0]]
     second_list = []
     for each in range(1, len(indexed_tokens)):
@@ -34,7 +40,7 @@ def merge_postings(indexed_tokens):
 
 def search_query(query):
     tokens = tokenize(str(query['query']))
-    indexed_tokens = remove_not_indexed_toknes(tokens)
+    indexed_tokens = remove_not_indexed_tokens(tokens)
     if len(indexed_tokens) == 0:
         return []
     elif len(indexed_tokens) == 1:
@@ -44,17 +50,11 @@ def search_query(query):
 
 
 def tokenize(text):
-    return text.split(" ")
+    return text.translate(None, string.punctuation).lower().split(' ')
 
 
 def add_token_to_index(token, doc_id):
-    if token in inverted_index:
-        current_postings = inverted_index[token]
-        current_postings.append(doc_id)
-        inverted_index[token] = current_postings
-    else:
-        inverted_index[token] = [doc_id]
-
+    inverted_index[token][doc_id] += 1
 
 def add_to_index(document):
     for token in tokenize(document['title']):
