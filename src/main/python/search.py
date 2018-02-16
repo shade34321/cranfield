@@ -30,10 +30,12 @@ def merge_two_postings(first, second):
 
 def merge_postings(indexed_tokens):
     # Fix
-    first_list = inverted_index[indexed_tokens[0]]
+    # Gets posting for first token in indexed_tokens
+    # is not a list but rather a defaultdict so we should use keys()
+    first_list = inverted_index[indexed_tokens[0]].keys()
     second_list = []
     for each in range(1, len(indexed_tokens)):
-        second_list = inverted_index[indexed_tokens[each]]
+        second_list = inverted_index[indexed_tokens[each]].keys()
         first_list = merge_two_postings(first_list, second_list)
     return first_list
 
@@ -44,13 +46,17 @@ def search_query(query):
     if len(indexed_tokens) == 0:
         return []
     elif len(indexed_tokens) == 1:
-        return inverted_index[indexed_tokens[0]]
+        return inverted_index[indexed_tokens[0]].keys()
     else:
         return merge_postings(indexed_tokens)
 
 
 def tokenize(text):
-    return text.translate(None, string.punctuation).lower().split(' ')
+    # This should be working but for some reason it's not. I'll come back later an figure out why.
+    # Converting to lower case and splitting on space should be enough
+    # return text.translate(None, string.punctuation).lower().split(' ')
+    return text.lower().split(' ')
+
 
 
 def add_token_to_index(token, doc_id):
