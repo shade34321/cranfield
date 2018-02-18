@@ -1,10 +1,11 @@
-import string
-
 from collections import defaultdict
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
 
 from readers import read_queries, read_documents
 
 inverted_index = defaultdict(lambda: defaultdict(int))
+stop_words = set(stopwords.words('english'))
 
 
 def remove_not_indexed_tokens(tokens):
@@ -13,19 +14,22 @@ def remove_not_indexed_tokens(tokens):
 
 
 def merge_two_postings(first, second):
-    first_index = 0
-    second_index = 0
-    merged_list = []
-    while first_index < len(first) and second_index < len(second):
-        if first[first_index] == second[second_index]:
-            merged_list.append(first[first_index])
-            first_index = first_index + 1
-            second_index = second_index + 1
-        elif first[first_index] < second[second_index]:
-            first_index = first_index + 1
-        else:
-            second_index = second_index + 1
-    return merged_list
+    # first_index = 0
+    # second_index = 0
+    # merged_list = []
+    # while first_index < len(first) and second_index < len(second):
+    #     if first[first_index] == second[second_index]:
+    #         merged_list.append(first[first_index])
+    #         first_index = first_index + 1
+    #         second_index = second_index + 1
+    #     elif first[first_index] < second[second_index]:
+    #         first_index = first_index + 1
+    #     else:
+    #         second_index = second_index + 1
+    # return merged_list
+
+    # Sets are a bag of words and guarantee uniqueness. This is a basic OR operation
+    return first + list(set(second) - set(first))
 
 
 def merge_postings(indexed_tokens):
@@ -55,7 +59,8 @@ def tokenize(text):
     # This should be working but for some reason it's not. I'll come back later an figure out why.
     # Converting to lower case and splitting on space should be enough
     # return text.translate(None, string.punctuation).lower().split(' ')
-    return text.lower().split(' ')
+    ps = PorterStemmer()
+    return [ps.stem(word) for word in text.lower().split(' ') if word not in stop_words]
 
 
 
