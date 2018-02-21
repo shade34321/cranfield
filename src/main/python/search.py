@@ -1,3 +1,6 @@
+import math
+import string
+
 from collections import defaultdict
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
@@ -6,6 +9,8 @@ from readers import read_queries, read_documents
 
 inverted_index = defaultdict(lambda: defaultdict(int))
 stop_words = set(stopwords.words('english'))
+ps = PorterStemmer()
+total_docs = 0
 
 
 def remove_not_indexed_tokens(tokens):
@@ -29,6 +34,7 @@ def merge_two_postings(first, second):
     # return merged_list
 
     # Sets are a bag of words and guarantee uniqueness. This is a basic OR operation
+    # This should probably be sortd but meh
     return first + list(set(second) - set(first))
 
 
@@ -57,26 +63,34 @@ def search_query(query):
 
 def tokenize(text):
     # This should be working but for some reason it's not. I'll come back later an figure out why.
-    # Converting to lower case and splitting on space should be enough
+    # Converting to lower case and splitting on space should be enough - Translate apparently doesn't work with unicode?
     # return text.translate(None, string.punctuation).lower().split(' ')
-    ps = PorterStemmer()
+    text = ''.join(ch for ch in text if ch not in set(string.punctuation))
     return [ps.stem(word) for word in text.lower().split(' ') if word not in stop_words]
 
+def term_freq(token, doc_id):
+    return 1 + math.log(inverted_index[token][doc_id])
 
+def idf(token):
+    return math.log((total_docs - 1) / float(len(inverted_index[token])))
 
 def add_token_to_index(token, doc_id):
     inverted_index[token][doc_id] += 1
 
 def add_to_index(document):
-    for token in tokenize(document['title']):
-        add_token_to_index(token, document['id'])
+    doc_info = [v for k, v in document.iteritems() if k not in ['id', 'author', 'bibliography', 'body']]
+    for info in doc_info:
+        for token in tokenize(info):
+            add_token_to_index(token, document['id'])
 
 
 def create_index():
+    # Apparently need to declare this global so we can use it...
+    global total_docs
     for document in read_documents():
+        total_docs += 1
         add_to_index(document)
     print "Created index with size {}".format(len(inverted_index))
-
 
 create_index()
 
