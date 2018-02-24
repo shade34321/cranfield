@@ -23,8 +23,9 @@ def remove_not_indexed_tokens(tokens):
 def merge_two_postings(first, second):
     # Sets are a bag of words and guarantee uniqueness. This is a basic OR operation
     # This should probably be sortd but meh
-    return first + list(set(second) - set(first))
-
+    #return first + list(set(second) - set(first))
+    first.extend(x for x in second if x not in first)
+    return first
 
 def merge_postings(indexed_tokens):
     # Fix
@@ -46,8 +47,8 @@ def search_query(query):
     elif len(indexed_tokens) == 1:
         return inverted_index[indexed_tokens[0]].keys()
     else:
-        #return merge_postings(indexed_tokens)
-        return idftf(indexed_tokens)
+        return merge_postings(indexed_tokens)
+        #return idftf(indexed_tokens)
 
 
 def tokenize(text):
@@ -68,30 +69,16 @@ def tf(term_frequency):
 def idf(token):
     return math.log((total_docs - 1) / float(len(inverted_index[token])))
 
+"""
 def idftf(query):
-    query_ii = defaultdict(int)
-
-    # Gets mye an inverted index with TF of the query
-    for token in query:
-        query_ii[token] += 1
-
-    q_length = 0
     scores = {}
+    for token in query:
 
-    for k, v in query_ii.iteritems():
-        tf_idf_score = tf(v)
-        if k in inverted_index:
-            tf_idf_score *= idf(len(inverted_index[k]))
-        q_length += tf_idf_score ** 2
-
-        for doc_id, doc_tf in inverted_index[k].iteritems():
-            d_idf_tf = term_freq(doc_tf, doc_id) * idf(len(inverted_index[k]))
-            scores[doc_id] = ((d_idf_tf**2), d_idf_tf * q_length)
 
     r = rank(q_length, scores)
     r.sort(key=lambda tup: tup[1], reverse=True)
     return [t[0] for t in rankings]
-
+"""
 
 # ranking based on cosine similarity
 def rank(q_length, scores):
