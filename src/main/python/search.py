@@ -13,6 +13,7 @@ stop_words = set(stopwords.words('english'))
 ps = PorterStemmer()
 sb = SnowballStemmer('english')
 total_docs = 0
+doc_length = {}
 
 
 def remove_not_indexed_tokens(tokens):
@@ -47,12 +48,11 @@ def search_query(query):
     elif len(indexed_tokens) == 1:
         return inverted_index[indexed_tokens[0]].keys()
     else:
-        return merge_postings(indexed_tokens)
-        #return idftf(indexed_tokens)
+        #return merge_postings(indexed_tokens)
+        return idftf(indexed_tokens)
 
 
 def tokenize(text):
-    # This should be working but for some reason it's not. I'll come back later an figure out why.
     # Converting to lower case and splitting on space should be enough - Translate apparently doesn't work with unicode?
     # I used both porterstemming and snowball stemming. They both had the same affect on the score.
     #Snowball is what I used last and hence why it's here. 
@@ -64,21 +64,20 @@ def term_freq(token, doc_id):
     return tf(inverted_index[token][doc_id])
 
 def tf(term_frequency):
-    return 1 + math.log(term_frequency)
+    return 1 + math.log(term_frequency, 2)
 
 def idf(token):
-    return math.log((total_docs - 1) / float(len(inverted_index[token])))
+    return math.log((total_docs - 1) / float(len(inverted_index[token])), 2)
 
-"""
 def idftf(query):
-    scores = {}
+    scores = defaultdict(int)
+
     for token in query:
+        for doc_id in inverted_index[token]:
+            scores[doc_id] += ((term_freq(token, doc_id) * idf(token)) * idf(token)) / doc_length[doc_id]
 
 
-    r = rank(q_length, scores)
-    r.sort(key=lambda tup: tup[1], reverse=True)
-    return [t[0] for t in rankings]
-"""
+    return [key for key, value in sorted(scores.iteritems(), key=lambda (k,v): (v,k), reverse=True)]
 
 # ranking based on cosine similarity
 def rank(q_length, scores):
@@ -98,10 +97,15 @@ def add_token_to_index(token, doc_id):
     inverted_index[token][doc_id] += 1
 
 def add_to_index(document):
-    doc_info = [v for k, v in document.iteritems() if k not in ['id', 'author', 'bibliography', 'body']]
+    doc_id = document['id']
+    doc_info = [v for k, v in document.iteritems() if k not in ['id']]
     for info in doc_info:
         for token in tokenize(info):
-            add_token_to_index(token, document['id'])
+            add_token_to_index(token, doc_id)
+            if document['id'] in doc_length:
+                doc_length[doc_id] += 1
+            else:
+                doc_length[doc_id] = 1
 
 
 def create_index():
