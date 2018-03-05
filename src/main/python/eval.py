@@ -1,3 +1,4 @@
+import collections
 import math
 
 from readers import read_relevance, read_queries
@@ -50,14 +51,52 @@ if __name__ == '__main__':
     ideal_ndcg_queries()
     sum = 0.0
     all_queries = [query for query in read_queries() if query['query number'] != 0]
+    scores = {0: {}, 10:{}, 20:{}, 30: {}, 40: {}, 50: {}, 60: {}, 70: {}, 80: {}, 90: {}, 100: {}}
+
     for query in all_queries:
         documents = search_query(query)
         assert len(documents)==len(set(documents)), "Search results should not have duplicates:"+str(documents)
         if len(documents) > 0:
-            print "Query:{} and Results:{}".format(query, documents)
             dcg = calculate_dcg(query, documents)
             idcg = ideal_ndcg[str(query['query number'])]
             ndcg = dcg / idcg
-            print "dcg={}, ideal={}, ndcg={}".format(dcg, idcg, ndcg)
+
+            if ndcg >= 1:
+                scores[100][query['query number']] = ndcg
+                #print "Query:{}".format(query)
+                #print "dcg={}, ideal={}, ndcg={}".format(dcg, idcg, ndcg)
+            elif ndcg >= .9:
+                scores[90][query['query number']] = ndcg
+                #print "Query {}".format(query)
+            elif ndcg >= .8:
+                scores[80][query['query number']] = ndcg
+            elif ndcg >= .7:
+                scores[70][query['query number']] = ndcg
+            elif ndcg >= .6:
+                scores[60][query['query number']] = ndcg
+            elif ndcg >= .5:
+                scores[50][query['query number']] = ndcg
+            elif ndcg >= .4:
+                scores[40][query['query number']] = ndcg
+            elif ndcg >= .3:
+                scores[30][query['query number']] = ndcg
+            elif ndcg >= .2:
+                scores[20][query['query number']] = ndcg
+            elif ndcg >= .1:
+                scores[10][query['query number']] = ndcg
+                #print "Query:{} and Results:{}".format(query, documents)
+                #print "dcg={}, ideal={}, ndcg={}".format(dcg, idcg, ndcg)
+                #print "Query {}".format(query)
+            else:
+                scores[0][query['query number']] = ndcg
+                #print "Query {}".format(query)
+
+
             sum = sum + ndcg
     print "Final ncdg for all queries is {}".format(sum / len(all_queries))
+
+    histogram = collections.OrderedDict(sorted(scores.items(), key=lambda k: k[0]))
+    for k,v in histogram.items():
+        print "We have {} scores in {}-{}".format(len(v), k, k + 10)
+        #for query_num, ndcg_score in v.iteritems():
+        #    print "Query Num: {} NDCG: {}".format(query_num, ndcg_score)
