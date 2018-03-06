@@ -1,0 +1,25 @@
+Shade Alabsa
+Cranfield Project
+Ferrosh Jacob
+
+Created index with size 8938
+Final ncdg for all queries is 0.60881017469
+We have 0 scores in 0-10
+We have 3 scores in 10-20
+We have 12 scores in 20-30
+We have 23 scores in 30-40
+We have 35 scores in 40-50
+We have 31 scores in 50-60
+We have 35 scores in 60-70
+We have 42 scores in 70-80
+We have 28 scores in 80-90
+We have 13 scores in 90-100
+We have 3 scores in 100-110
+
+My final NCDG score for the cranfield project was 0.60881017469. 
+
+I implemented several things in improving my score. I changed the merge two postings to an or operation instead of the and operation it was. I also added in TF.IDF,  used a snowball stemmer, removed punctuation from tokens, stop words, poor man's synonyms, and cosine similarity. I didn't get cosine similarity completely working primarily because I was working around how I created my inverted index and other members in class had implemented it with moderately better succes than my current score. 
+
+For my inverted index it's compromised of a defaultdict of defaultdicts. The first key is the token and the second key is the doc_id. The value for the second key is the TF and the length of the first defaultdict is the IDF and posting for the token. This surprinsgly made my life really easy when doing TF.IDF but you have to be careful with it since by default a defaultdict will create an entry if it doesn't exist and set it to a default value. This issue caused a few problems with my cosine similarity since I would end up diving by 0 which meant I was checking for a doc_id that wasn't inside a token posting. 
+
+Ultimately nothing really helped my score but converting the and to an or which jumped my score up to .3 and some change. The next thing that increased my score was implementing TF.IDF which jumped me up to .6088.
